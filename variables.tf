@@ -3,23 +3,8 @@ variable "ssh_key_id" {
 }
 
 variable "instance_type" {
-  default     = "t2.micro"
+  default     = "t3a.micro"
   description = "The machine type to launch, some machines may offer higher throughput for higher use cases."
-}
-
-variable "asg_min_size" {
-  default     = 1
-  description = "We may want more than one machine in a scaling group, but 1 is recommended."
-}
-
-variable "asg_desired_capacity" {
-  default     = 1
-  description = "We may want more than one machine in a scaling group, but 1 is recommended."
-}
-
-variable "asg_max_size" {
-  default     = 1
-  description = "We may want more than one machine in a scaling group, but 1 is recommended."
 }
 
 variable "vpc_id" {
@@ -31,14 +16,14 @@ variable "subnet_ids" {
   description = "A list of subnets for the Autoscaling Group to use for launching instances. May be a single subnet, but it must be an element in a list."
 }
 
-variable "wg_client_public_keys" {
-  # type        = map(string)
-  description = "List of maps of client IPs and public keys. See Usage in README for details."
+variable "client_config_file" {
+  type        = string
+  description = "JSON configuration file containing peer configuration."
 }
 
 variable "wg_server_net" {
-  default     = "192.168.2.1/24"
-  description = "IP range for vpn server - make sure your Client ips are in this range but not the specific ip i.e. not .1"
+  default     = "10.254.0.1/24"
+  description = "Private IP range in CIDR notation for VPN server. Make sure your clients do not conflict with the server IP."
 }
 
 variable "wg_server_port" {
@@ -54,12 +39,13 @@ variable "wg_persistent_keepalive" {
 variable "use_eip" {
   type        = bool
   default     = false
-  description = "Whether to enable Elastic IP switching code in user-data on wg server startup. If true, eip_id must also be set to the ID of the Elastic IP."
+  description = "Whether to enable Elastic IP switching code in user-data on wg server startup."
 }
 
 variable "eip_id" {
   type        = string
-  description = "ID of the Elastic IP to use, when use_eip is enabled."
+  default     = null
+  description = "ID of the Elastic IP to use. When use_eip is enabled and eip_id is not provided, a new EIP will be generated and used."
 }
 
 variable "additional_security_group_ids" {
@@ -68,28 +54,18 @@ variable "additional_security_group_ids" {
   description = "Additional security groups if provided, default empty."
 }
 
-variable "target_group_arns" {
-  type        = list(string)
-  default     = null
-  description = "Running a scaling group behind an LB requires this variable, default null means it won't be included if not set."
-}
-
-variable "env" {
-  default     = "prod"
-  description = "The name of environment for WireGuard. Used to differentiate multiple deployments."
-}
-
 variable "wg_server_private_key_param" {
   default     = "/wireguard/wg-server-private-key"
   description = "The SSM parameter containing the WG server private key."
 }
 
+
 variable "ami_id" {
   default     = null # we check for this and use a data provider since we can't use it here
-  description = "The AWS AMI to use for the WG server, defaults to the latest Ubuntu 16.04 AMI if not specified."
+  description = "The AWS AMI to use for the WG server, defaults to the latest Ubuntu 20.04 AMI if not specified."
 }
 
 variable "wg_server_interface" {
-  default     = "eth0"
+  default     = "ens5"
   description = "The default interface to forward network traffic to."
 }
